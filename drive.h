@@ -6,7 +6,7 @@
 #define HDA_IRQ 14 
 #define HDA_MAXCYLINDER 16
 #define HDA_MAXSECTOR 16
-#define HDA_SECTORSIZE 512
+#define HDA_SECTORSIZE 256
 
 #define CMD_SEEK 0x02
 #define CMD_READ 0x04

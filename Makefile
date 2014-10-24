@@ -1,7 +1,7 @@
 # $Id: Makefile,v 1.1 2002/12/06 14:25:18 marquet Exp $
 ##############################################################################
 
-ROOTDIR=/home/enseign/ASE
+ROOTDIR=./libhardware/
 
 CC	= gcc
 CFLAGS	= -Wall -ansi -pedantic
