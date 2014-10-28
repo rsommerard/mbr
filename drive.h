@@ -6,7 +6,7 @@
 #define HDA_IRQ 14 
 #define HDA_MAXCYLINDER 16
 #define HDA_MAXSECTOR 16
-#define HDA_SECTORSIZE 256
+#define HDA_SECTORSIZE 512
 
 #define CMD_SEEK 0x02
 #define CMD_READ 0x04
@@ -20,5 +20,7 @@ void read_sector(unsigned int cylinder, unsigned int sector, unsigned char *buff
 void write_sector(unsigned int cylinder, unsigned int sector, const unsigned char *buffer);
 
 void format_sector(unsigned int cylinder, unsigned int sector, unsigned int nsector, unsigned int value);
+
+void init_master();
                    
 #endif

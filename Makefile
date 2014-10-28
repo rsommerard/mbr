@@ -12,39 +12,56 @@ LIBS    = -lhardware
 ###------------------------------
 ### Main targets 
 ###------------------------------------------------------------
-BINARIES= mkhd dmps frmt vm
-OBJECTS	= $(addsuffix .o,\
-	  drive mbr vol)
+BINARIES= mkhd dmps frmt mkvol dvol
+OBJECTS	= drive.o dmps.o frmt.o mkhd.o mkvol.o dvol.o
 
 all: $(BINARIES) $(OBJECTS)
 
 ###------------------------------
 ### Binaries
 ###------------------------------------------------------------
-mkhd: mkhd.o
+mkhd: mkhd.o mbr.o drive.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBDIR) $(LIBS)
-dmps: dmps.o
+
+dmps: dmps.o drive.o mbr.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBDIR) $(LIBS)
-frmt: frmt.o
+
+dvol: dvol.o mbr.o drive.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBDIR) $(LIBS)
-vm: vm.o mbr.o drive.o vol.o
+
+frmt: frmt.o drive.o mbr.o
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBDIR) $(LIBS)
+
+mkvol: mkvol.o mbr.o drive.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBDIR) $(LIBS)
 
 ###------------------------------
 ### #include dependences 
 ###------------------------------------------------------------
 # you may fill these lines with "make depend"
-mkhd.o: mkhd.c 
-dmps.o: dmps.c 
-frmt.o: frmt.c 
-vm.o: vm.c 
+mkhd.o: mkhd.c
+	$(CC) $(CFLAGS) -c $^ $(INCDIR)
 
-drive.o: drive.c drive.h
-mbr.o: mbr.c drive.h mbr.h
-vol.o: vol.c drive.h vol.h
+dmps.o: dmps.c
+	$(CC) $(CFLAGS) -c $^ $(INCDIR)
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< $(INCDIR)
+frmt.o: frmt.c
+	$(CC) $(CFLAGS) -c $^ $(INCDIR)
+
+drive.o: drive.c
+	$(CC) $(CFLAGS) -c $^ $(INCDIR)
+
+mkvol.o: mkvol.c
+	$(CC) $(CFLAGS) -c $^ $(INCDIR)
+
+dvol.o: dvol.c
+	$(CC) $(CFLAGS) -c $^ $(INCDIR)
+
+mbr.o: mbr.c
+	$(CC) $(CFLAGS) -c $^ $(INCDIR)
+
+vol.o: vol.c
+	$(CC) $(CFLAGS) -c $^ $(INCDIR)
 
 ###------------------------------
 ### Misc.

@@ -1,92 +1,113 @@
-/* ------------------------------
-   $Id: mkvol.c 7089 2013-10-19 08:27:30Z marquet $
-   ------------------------------------------------------------
-
-   mkvol - create a new volume
-   Philippe Marquet, Oct 2013
-   
-*/
-
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include <string.h>
+#include "hardware.h"
+#include "mbr.h"
+#include "drive.h"
 
 /* default values */
-#define NSECTORS_DFLT           421
-#define FIRST_CYLINDER_DFLT     3
-#define FIRST_SECTOR_DFLT       7
-#define VOL_DFLT                2
+#define NSECTORS_DFLT           666
+#define FIRST_CYLINDER_DFLT     0
+#define FIRST_SECTOR_DFLT       1
+#define VOL_DFLT                0
 
-static char *cmdname;
+extern struct mbr_s mbr;
 
-static void
-usage ()
+static void empty_it()
 {
-    fprintf(stderr, "usage: %s [options]... [args]...\n", cmdname);    
-    fprintf(stderr, "\toptions : -l nsectors -c first_cylinder -s first_sector -v vol_number\n");
-    exit(EXIT_FAILURE);
+    return;
 }
 
-static void
-unknown_opt (char opt)
+int main (int argc, char **argv)
 {
-    if (isprint(opt))
-        fprintf(stderr, "Unknown option `-%c'.\n", opt);
+    unsigned int i;
+    unsigned int index_valide;
+    unsigned int size;
+    unsigned int cylinder;
+    unsigned int sector;
+    unsigned int vol;
+
+    if(argc != 1 && argc != 7)
+    {
+	    fprintf(stderr, "Error arguments missing\n");
+	    exit(EXIT_FAILURE);
+    }
+
+    if(argc == 1)
+    {
+        size = NSECTORS_DFLT;
+        cylinder = FIRST_CYLINDER_DFLT;
+        sector = FIRST_SECTOR_DFLT;
+    }
     else
-        fprintf(stderr, "Unknown option character `\\x%x'.\n", opt);
+    {
+        size = atoi(argv[2]);
+        if(size < 0 || size > (HDA_SECTORSIZE * ((HDA_MAXSECTOR * HDA_MAXCYLINDER) - 1)))
+        {
+            fprintf(stderr, "Error size\n");
+	    exit(EXIT_FAILURE);
+        }
 
-    usage();
-}
+        cylinder = atoi(argv[4]);
+        if(cylinder < 0 || cylinder > HDA_MAXCYLINDER)
+        {
+            fprintf(stderr, "Error cylinder\n");
+	    exit(EXIT_FAILURE);
+        }
 
-int
-main (int argc, char **argv)
-{
-    int vol = VOL_DFLT,
-        nsectors = NSECTORS_DFLT,
-        firstcylinder = FIRST_CYLINDER_DFLT,
-        firstsector = FIRST_SECTOR_DFLT;
-    int i, c;
-
-    cmdname = argv[0];
-    opterr = 0;
-    
-    while ((c = getopt(argc, argv, "l:c:s:v:")) != -1) {
-        switch (c) {
-            case 'l':
-                nsectors = atol(optarg);
-                break;
-            case 'c':
-                firstcylinder = atol(optarg);
-                break;
-            case 's':
-                firstsector = atol(optarg);
-                break;
-            case 'v':
-                vol = atol(optarg);
-                break;
-            case '?':           /* missing option argument */
-                if (optopt == 'l' || optopt == 'c' || optopt == 's') {
-                    fprintf(stderr,
-                            "Option -%c requires an argument.\n", optopt);
-                    usage();
-                } else
-                    unknown_opt(optopt);
-            default:
-                unknown_opt(c);
+	sector = atoi(argv[6]);
+        if(sector < 0 || sector > HDA_MAXCYLINDER)
+        {
+            fprintf(stderr, "Error sector\n");
+	    exit(EXIT_FAILURE);
         }
     }
 
-    if (optind != argc) {
-        fprintf(stderr, "Argument(s): ");
-        for (i = optind; i < argc; i++)
-            fprintf(stderr, "%s ", argv[i]);
-        fprintf(stderr, "ignored.\n");
-        usage();
-    }        
+    vol = VOL_DFLT;
     
-    printf("mkvol(vol=%d, nsectors=%d, firstcylinder=%d, firstsector=%d)\n",
-           vol, nsectors, firstcylinder, firstsector);
+    /* init hardware */
+    if(init_hardware("hardware.ini") == 0)
+    {
+	    fprintf(stderr, "Error in hardware initialization\n");
+	    exit(EXIT_FAILURE);
+    }
 
+    /* Interreupt handlers */
+    for(i=0; i<16; i++)
+	    IRQVECTOR[i] = empty_it;
+
+    /* Allows all IT */
+    _mask(1);
+
+    init_master();
+    
+    index_valide = -1;
+    for(i=0; i<NB_VOLS; i++)
+    {
+        if(mbr.vols[i].valide == 0)
+        {
+            index_valide = i;
+            vol = i;
+            break;
+        }
+    }
+
+    if(index_valide == -1)
+    {
+        fprintf(stderr, "Error no free volume\n");
+	exit(EXIT_FAILURE);
+    }
+            
+    mbr.vols[vol].type = BASE;
+    mbr.vols[vol].nb_sec = 1 + (size / HDA_SECTORSIZE);
+    mbr.vols[vol].prem_cyl = cylinder;
+    mbr.vols[vol].prem_sec = sector;
+    mbr.vols[vol].valide = 1;
+
+    mbr.nb_vols++;
+
+    write_mbr();
+
+    /* and exit! */
     exit(EXIT_SUCCESS);
 }

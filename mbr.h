@@ -31,6 +31,4 @@ void read_mbr();
 
 void write_mbr();
 
-void display_mbr();
-
 #endif

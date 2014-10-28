@@ -2,6 +2,10 @@
 #include <string.h>
 #include "drive.h"
 #include "hardware.h"
+#include "mbr.h"
+#include <assert.h>
+
+extern struct mbr_s mbr;
 
 void seek(int cylinder, int sector)
 {
@@ -42,9 +46,9 @@ void format_sector(unsigned int cylinder, unsigned int sector, unsigned int nsec
     int i, j;
     int k = 0;
     
-    for(i = 0; i < HDA_MAXCYLINDER; i++)
+    for(i = cylinder; i < HDA_MAXCYLINDER; i++)
     {
-        for(j = 0; j < HDA_MAXSECTOR; j++)
+        for(j = sector; j < HDA_MAXSECTOR; j++)
         {
             if(k++ == nsector)
                 return;
@@ -52,12 +56,36 @@ void format_sector(unsigned int cylinder, unsigned int sector, unsigned int nsec
             seek(i, j);
             _out(HDA_DATAREGS, 0);
             _out(HDA_DATAREGS + 1, 1);
-            _out(HDA_DATAREGS + 2, 0);
-            _out(HDA_DATAREGS + 3, 0);
-            _out(HDA_DATAREGS + 4, 0);
-            _out(HDA_DATAREGS + 5, 0);
+            _out(HDA_DATAREGS + 2, (value >> 24) & 0xFF);
+            _out(HDA_DATAREGS + 3, (value >> 16) & 0xFF);
+            _out(HDA_DATAREGS + 4, (value >> 8) & 0xFF);
+            _out(HDA_DATAREGS + 5, value & 0xFF);
             _out(HDA_CMDREG, CMD_FORMAT);
             _sleep(HDA_IRQ);
         }
+    }
+}
+
+void init_master()
+{
+    int i;
+
+    read_mbr();
+
+    if(mbr.magic != MAGIC)
+    {
+        assert(mbr.magic != MAGIC);
+        mbr.nb_vols = 0;
+        for(i=0; i<NB_VOLS; i++)
+        {
+            mbr.vols[i].type = BASE;
+            mbr.vols[i].nb_sec = 0;
+            mbr.vols[i].prem_cyl = 0;
+            mbr.vols[i].prem_sec = 0;
+            mbr.vols[i].valide = 0;
+        }
+        mbr.magic = MAGIC;
+
+        write_mbr();
     }
 }

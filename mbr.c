@@ -29,7 +29,6 @@ void read_mbr()
             mbr.vols[i].valide = 0;
         }
         mbr.magic = MAGIC;
-        write_mbr();
     }
 }
 
@@ -44,26 +43,4 @@ void write_mbr()
     memcpy(buffer, &mbr, sizeof(struct mbr_s));
     
     write_sector(0, 0, buffer);
-}
-
-void display_mbr()
-{
-    int i;
-    
-    read_mbr();
-    
-    printf("--------------------------------------------------------------------------------\n");
-    printf("MBR\n");
-    printf("--------------------------------------------------------------------------------\n");
-    printf("Nb volumes: %i\n", mbr.nb_vols);
-    for(i=0; i<NB_VOLS; i++)
-    {
-        printf("----------------------------------------\n");
-        printf("Volume %i:\n", i+1);
-        printf("\tType: %i\n", mbr.vols[i].type);
-        printf("\tNbSec: %i\n", mbr.vols[i].nb_sec);
-        printf("\tPremCyl: %i\n", mbr.vols[i].prem_cyl);
-        printf("\tPremSec: %i\n", mbr.vols[i].prem_sec);
-        printf("\tValide: %i\n", mbr.vols[i].valide);
-    }
 }

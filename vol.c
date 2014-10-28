@@ -12,12 +12,12 @@ unsigned int nsec_of_nbloc(unsigned int nvol, unsigned int nbloc)
 
 void read_bloc(unsigned int vol, unsigned int nbloc, unsigned char *buffer)
 {
-    read_sector(ncyl_of_nbloc(vol,nbloc), nsec_of_nbloc(vol, nbloc), &buffer)
+    read_sector(ncyl_of_nbloc(vol,nbloc), nsec_of_nbloc(vol, nbloc), &buffer);
 }
 
 void write_bloc(unsigned int vol, unsigned int nbloc, const unsigned char *buffer)
 {
-    write_sector(ncyl_of_nbloc(vol,nbloc), nsec_of_nbloc(vol, nbloc), &buffer)
+    write_sector(ncyl_of_nbloc(vol,nbloc), nsec_of_nbloc(vol, nbloc), &buffer);
 }
 
 void format_vol(unsigned int vol)

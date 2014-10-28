@@ -3,8 +3,7 @@
 #include "hardware.h"
 #include "drive.h"
 
-static void
-empty_it()
+static void empty_it()
 {
     return;
 }
